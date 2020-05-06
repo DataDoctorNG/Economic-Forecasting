@@ -1,0 +1,214 @@
+rm(list=ls()) # clears workspace
+#
+#
+# Nicholas Golina
+#
+#
+
+#
+#
+# Assignment 3 & June 17th and 18th 2017
+#
+
+#
+#
+#Coding for the ps3.csv dataset
+#Getting the Data
+#This imports and views the data 
+
+ps3 <- read.csv("~/Google Drive/UA/Senior Year/Economic Forecasting/Data/ps3.csv")
+View(ps3)
+
+#
+#Inspecting the Data
+#This creates a time series plot of the fortified wine sales variable
+
+ts.plot(ps3$fortw, main="Plot of Fortified Wine Sales", col="red")
+
+#
+#
+#This creates a time series variable for fortified wine sales. The frequency of 12 
+#is mean't to allow for the variable to match the characteristics of the data, especially
+#since it is a seasonal dataset with trend. 
+
+tsfortw <- ts(ps3$fortw, frequency =12)
+
+#
+#
+#This creates a correlogram for the time series variable for fortified wine sales 
+#Both plots indicate that positive autocorrelation is definitely possible. It appears 
+#that the dataset is seasonal with trend. The forecasting technique that should be used in this 
+#case is the exponential smoothing model with seasonality since it can account for different degrees of
+#seasonality and takes into account all observations
+
+acf(tsfortw) 
+
+#
+#Forecasting the Data
+#This does the Holt Winters procedure for the fortified wine sales time series variable 
+#the decreasing trend of the data demonstrates multiplicative seasonality. 
+
+HWFortw <- HoltWinters(tsfortw, seasonal = "multiplicative")
+
+#
+#
+#The plot is meant to compare the original pattern of the fortified wine sales 
+#time series variable to the Holt Winters procedure.The graph of the Holt Winters (indicated with brown) seems to indicate
+#more pronounced trends from the fortified wine sales at times, while also creating 
+#new cyclical mini trends within the data
+
+plot(HWFortw, main="Comparing the Holt Winters Model to Fortified Wine Sales", col="black")
+
+#
+#
+#This creates the MAPE for the Holt Winters method and prints it. The 
+#value is 7.9876. 
+
+HWMAPEFortw <- (100/175)*sum((abs(tsfortw - HWFortw$fitted[,1]))/tsfortw)
+print(HWMAPEFortw)
+
+#
+#
+#This does a prediction for the Holt Winters forecast of Fortified Wine Sales
+#for one period out. The forecast indicates that by August of the 16th period 
+#fortified wine sales will be 2465.953. 
+
+predict(HWFortw, n.ahead=1)
+
+#
+#
+#This creates a series of lag varaibles for the naive seasonal model with trend procedure.
+  
+NaiveFortw.lag11 <- lag(tsfortw, -11)
+
+NaiveFortw.lag12 <- lag(tsfortw, -12)
+
+NaiveFortw.lag13 <- lag(tsfortw, -13)
+
+NaiveFortw.lag1 <- lag(tsfortw, -1)
+
+#
+#
+#This creates a manual set of commands to do the equation for the naive seasonal model with trend in the context
+#of the seasonal model. 
+
+NaiveFortw <- (NaiveFortw.lag12 + ((NaiveFortw.lag1 - NaiveFortw.lag13)/12))
+
+#
+#
+#This creates the MAPE for the naive model and prints it. The MAPE is 9.92309.
+#This means that the Exponential Smoothing model using the Holt Winters function
+#is the best method to use since it has the lowest MAPE
+
+NaiveMAPEFortw <- ((100/175)*sum((abs(tsfortw - NaiveFortw))/tsfortw))
+print(NaiveMAPEFortw) 
+
+#
+#
+#This creates a plot comparing the Naive Seasonality Model (indicated in green) forecast to the original 
+#plot for fortified wine sales. Some of the slight breaks in cyclical patterns
+#among the graph are replaced with more sharp turns in the direction of increases and decreases 
+
+ts.plot(tsfortw, main="Comparing the Naive Seasonality Model with Trend to Fortified Wine Sales", col="red")
+lines.default(NaiveFortw, col="green")
+
+#
+#
+#This creates prediction for the Naive seasonal model with trend.
+#The column bind function forecasts that by august of the 16th period 
+#fortified wine sales are forecasted to reach 2332.75. 
+
+cbind(tsfortw, NaiveFortw)
+
+#
+#
+#Coding for the ps3b.csv dataset 
+#Getting the Data
+#
+ 
+ps3b <- read.csv("~/Google Drive/UA/Senior Year/Economic Forecasting/Data/ps3b.csv")
+View(ps3b) 
+
+#
+#Inspecting the Data
+#This creates a time series plot for the variable x. The data does not appear
+#to demonstrate any strong trends. There could be an upward trend, but it 
+#is not that pronounced
+  
+ts.plot(ps3b$x, main="Plot of x", col="red")
+
+#
+#
+#This creates a time series variable out of x with a frequency of 6
+
+tsx <- ts(ps3b$x, frequency =6)
+
+#
+#
+#This creates a correlogram for x. The graph seems to demonstrate autocorrelation 
+#in a positive and negative direction by relatively equal weight
+
+acf(tsx) 
+
+#
+#
+#This does the Holt Winters procedure for the x variable. It is additive because the trend 
+#is not very present and not downward sloping
+
+HWx <- HoltWinters(tsx, seasonal = "additive")
+
+#
+#
+#This is the plot of the Holt Winters forecast (in black) for x compared to the original plot for x
+#Most of the trends in the Holt Winters forecast are more pronounced than the graph for x and overall
+#there are more changes in the pattern for the Holt Winters than the graph for x.
+
+plot(HWx, main="Comparing the Holt Winters Model to x", col="black")
+
+#
+#
+#This creates the MAPE for the Holt Winters procedure of the variable x and prints it
+#The value is 44.1842. 
+
+HWMAPEx <- ((100/54)*sum(abs(tsx - HWx$fitted[,1])/tsx))
+print(HWMAPEx)
+
+#
+#
+#This creates a prediction 1 period ahead for the Holt Winters procedure. 
+#The prediction is that x will equal 1.2489.
+
+predict(HWx, n.ahead=1)
+
+#
+#
+#This creates a lag function for the naive model for x
+
+Naivex.lag6 <- lag(tsx, -6)
+
+#
+#
+#This plots the Naive model forecast (in orange) against the original data for x. 
+#The Naive model demonstrates a more upward trend and some trends are more emphasized than others
+#some of the original changes in the pattern of x was minimized towards the end of the graph 
+
+
+ts.plot(tsx, main="Comparing the Naive Model to x", col="red")
+lines.default(Naivex.lag6, col="orange")
+
+#
+#
+#This creates the MAPE for the Naive model for x and prints it
+#The value is 78.63863, which means that the Holt Winters MAPE was lowest and therefore more accurate.
+
+NaiveMAPEx <- ((100/54)*sum(abs(tsx - Naivex.lag6)/tsx))
+print(NaiveMAPEx)
+
+#
+#
+#This does a prediction for x for the next period ahead
+#The predicted value was .034368.
+
+cbind(tsx, Naivex.lag6)
+
+

@@ -1,0 +1,261 @@
+rm(list=ls()) # clears workspace
+#
+#
+# Nicholas Golina worked with Katie Leslein, Jephtha Oppong-atta and Kevin Coyne
+#
+#
+
+#
+#
+# Assignment 4 21st June 2017
+#
+#
+
+#
+#Time Series {x1,t}
+#This imports the data and reads it.
+
+ps4 <- read.csv("~/Google Drive/UA/Senior Year/Economic Forecasting/Data/ps4.csv")
+View(ps4)
+
+#
+#
+#This defines an object as a time series of x1 and some lag variables as well.
+
+tsx1 <- ts(ps4$x1)
+
+tsx1.lag1 <- lag(tsx1, -1)
+
+tsx1.lag2 <- lag(tsx1, -2)
+
+#
+#Identifying the Time Series
+#To find the root of the equation x_t = Bx_t + w1_t
+#then, x_t(l-B)= w1_t
+#then l-B =0 because Bx_t = x_t-1
+#Thus, B = 1 and it is the root of the equation.This means that the data is not stationary.
+
+#
+#
+#This creates a plot for tsx1
+
+ts.plot(tsx1, main="Plot of x1", col="red")
+
+#
+#
+#This creates an acf plot for tsx1.
+#The plots show the non stationarity of the variable as was evidenced by the roots of the equation.
+
+acf(tsx1)
+
+#
+#One way that you can make the time series stationary is to use a difference function. 
+#The first difference is equivalent to Y_t - Y_t-1.
+#
+
+#
+#Forecasting the Time Series
+#This creates the Naive Model with trend for the y hat. The model could be used because there appears to be an 
+#upward trend. 
+
+yhatNaivetsx1 <- (2*tsx1.lag1 - tsx1.lag2)
+
+#
+#
+#This creates the MAPE for the tsx1 variable for the Naive model and Naive model with trend and prints it. 
+#The value of the MAPE of the Naive model with trend is 6099.257 and the value from the NAIVE model is 2932.537. 
+
+NaivetrendMAPEtsx1 <- sum((abs(tsx1 - yhatNaivetsx1))/tsx1)
+print(NaivetrendMAPEtsx1) 
+
+NaiveMAPEtsx1 <- sum((abs(tsx1 - tsx1.lag1))/tsx1)
+print(NaiveMAPEtsx1) 
+
+#
+#
+#This creates a column bind for tsx1 to forecast to the next period. The model forecasts that in the next 
+#period there will be a value of 2.55046305 for x1
+
+cbind(tsx1, tsx1.lag1)
+
+#
+#Time Series {x2,t}
+#
+
+#
+#
+#This defines an object as a time series of x2 and a lag variable as well.
+
+tsx2 <- ts(ps4$x2)
+
+tsx2.lag1 <- lag(tsx2, -1)
+
+tsx2.lag2 <- lag(tsx2, -2)
+
+#
+#Identifying the Time Series
+#
+
+#
+#
+#This creates a plot for tsx2
+
+plot(tsx2, main="Plot of x2 over a time series", col="red")
+
+#
+#
+#This creates an acf plot for tsx2. 
+#I do not anticipate that the data is stationary, because there is a general upward trend
+#and the acf does not match characteristics of stationary data with an acf. The acf reveals slow decay,
+#which is an indication of non stationarity. 
+
+acf(tsx2)
+
+#
+#
+#This demeans tsx2 and stores the result into an object and creates lagged versions of it.
+
+x.tilde <- (tsx2 - sd(tsx2))
+
+x.tilde.lag1 <- lag(x.tilde, -1)
+
+x.tilde.lag2 <- lag(x.tilde, -2)
+
+#
+#
+#This creates a plot of x.tilde
+
+plot(x.tilde, main="Plot of the Demeaned x2 over a time series", col="red")
+
+#
+#
+#This creates an acf plot for x.tilde. The plots do not reveal much of a change in terms of stationarity at 
+#all.
+
+acf(x.tilde)
+
+#
+#Forecasting the Time Series.
+#This creates the yhat for tsx2 and x.tilde.The Naive model with trend was used because there is clearly a trend upward
+#based on the plots of the data. 
+
+yhatNaivetrendtsx2 <- (2*tsx2.lag1 - tsx2.lag2)
+
+#
+#
+#This creates the MAPE for tsx2 and prints it. The value of the MAPE is 11.69091 
+#for the regular tsx2 Naive model with trend. It is advisable to use the Naive model with trend 
+#since it is trending upward in the plots.
+
+NaiveMAPEtsx2 <- sum((abs(tsx2 - yhatNaivetrendtsx2))/tsx2)
+print(NaiveMAPEtsx2) 
+
+#
+#
+#This creates a prediction for tsx2 1 period ahead. The value for the period ahead is 28.199699280.
+
+cbind(tsx2, yhatNaivetrendtsx2)
+
+#
+#Time Series {x3,t}
+#
+
+#
+#
+#This defines an object as a time series of x3 and a lag variable as well.
+
+tsx3 <- ts(ps4$x3)
+
+tsx3.lag1 <- lag(tsx3, -1)
+
+tsx3.lag2 <- lag(tsx3, -2)
+
+#
+#Identifying the Time Series.
+#The root of the equation can be found using the following mathematical method.
+#x3_t = (5/6)x3_t-1 + (-1/6)x3_t-2 + w3_t
+#x3_t - (5/6)Bx3_t - (-1/6)B^2x3 = w3_t
+#(1/6)(6 - 5B + B^2)(x3_t) = w3_t
+#(1/6)(B-3)(B-2)(x3_t) = w3_t
+#This means that the roots of the equation are 2 and 3 and the data is stationary according to the roots.
+  
+#
+#
+#This creates a plot for tsx3
+  
+plot(tsx3, main="Plot of x3 over a time series", col="red")
+
+#
+#
+#This creates an acf plot for tsx3. The acf plot definitely suggests stationarity and the plot of the time series
+#suggests that the data continues to function around 0. 
+
+acf(tsx3)
+
+#
+#Forecasting the Time Series.
+#This creates an ar model for tsx3. It chose the first order because it looks for the order that minimizes 
+#the AIC.
+
+ar(tsx3)
+
+ARtsx3 <- arima(tsx3, order=c(1, 0 ,0), include.mean=FALSE)
+
+arima(tsx3, order=c(1, 0 ,0), include.mean=FALSE)
+
+ARResidtsx3 <- ARtsx3$residuals
+
+#
+#
+#This creates the ARIMA model for tsx3
+
+arima(tsx3, order=c(2, 0 ,0), include.mean=FALSE)
+
+ARIMAtsx3 <- arima(tsx3, order=c(2, 0 ,0), include.mean=FALSE)
+
+ARIMAResidtsx3 <- ARIMAtsx3$residuals
+
+#
+#
+#This calculates the MAPE for the AR model. The value for the MAPE is -3.989864.
+
+ARMAPEtsx3 <- sum((abs(ARResidtsx3))/tsx3)
+print(ARMAPEtsx3) 
+
+#
+#
+#This calculates the MAPE for the ARIMA model. The value for the MAPE is -4.234334. This means that 
+#in technical terms the ARIMA model of the 2nd order is better. 
+
+ARIMAMAPEtsx3 <- sum((abs(ARIMAResidtsx3))/tsx3)
+print(ARIMAMAPEtsx3) 
+
+#
+#
+#This calculates the corrected AIC for the AR function of tsx3. The AIC for the AR function was 291.45
+#and the corrected AIC was 291.4908.
+
+AICCARtsx3 <- (291.45 + ((2*1)*(2))/(100-2))
+
+print(AICCARtsx3)
+
+#
+#
+#This calculates the corrected AIC for the ARIMA function of tsx3. The AIC for the ARIMA function was 292.22
+#and that corrected AIC was 292.3025. This means that the better model is the AR function with the order 1, but 
+#it is not consistent with the order of the equation. 
+
+AICCARIMAtsx3 <- (292.22 + (((2*2)*(2))/(100-3)))
+
+print(AICCARIMAtsx3)
+
+#
+#
+#This does a prediction for the ARIMA Function of tsx3. The use of this is due to the fact that it is of the
+#correct order and has little difference in terms of the corrected AIC and the MAPE was lower.
+#The prediction is that for 1 period ahead the value of tsx3 will be 1.326071.
+
+predict(ARIMAtsx3 ,n.ahead = 1)
+
+
+

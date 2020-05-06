@@ -1,0 +1,180 @@
+rm(list=ls()) # clears workspace
+#
+#
+# Nicholas Golina
+#
+#
+
+#
+#
+# Assignment 5 & July 1st 2017
+#
+#
+
+#
+#
+#This Defines the Shift Function
+shift<-function(x,shift_by){
+  stopifnot(is.numeric(shift_by))
+  stopifnot(is.numeric(x))
+  
+  if (length(shift_by)>1)
+    return(sapply(shift_by,shift, x=x))
+  
+  out<-NULL
+  abs_shift_by=abs(shift_by)
+  if (shift_by > 0 )
+    out<-c(tail(x,-abs_shift_by),rep(NA,abs_shift_by))
+  else if (shift_by < 0 )
+    out<-c(rep(NA,abs_shift_by), head(x,-abs_shift_by))
+  else
+    out<-x
+  out
+}
+
+#
+#
+#Some math first
+#
+#1. xt = xt−1 − 1/4xt−2 + wt + 1/2wt−1
+#1/4x(4-4B-B^2)=1/2w(2+B) 
+#1/4x(B-2)(B-2)=1/2w(2+B)
+#This is stationary and invertible and there is not parameter redundancy. 
+#2. xt = 2xt−1 −xt−2 +wt
+#x(B^2-2B+1)=w 
+#x(B-1)(B-1)=w
+#This is non stationary non invertible with no parameter redundency. 
+#3. xt = 3/2xt−1 − 1/2xt−2 + wt − 1/2wt−1 + 1/4wt−2 
+#1/2x(B^2-3b+2)=1/4w(B^2-2B+4)
+#1/2x(B-2)(B-1)=1/4w(B^2-2B+4)
+#1+3i and 1-3i for the error term, which is greater than 1 with the absolute value. 
+#This is non stationary and invertible.
+#4. xt = 3/2xt−1 − 1/2xt−2 + 1/2wt − wt−1
+#1/2x(B^2-3b+2)=-1/2w(B-1) 
+#1/2x(B-2)(B-1)=-1/2w(B-1) 
+#Nonstationary and non invertible.
+#5. xt = 7/10xt−1 − 1/10xt−2 + wt − 3/2wt−1
+#1/10x(B^2-7B+10)=w(-3/2B+1) 
+##1/10x(B-5)(B-2)=-3/2w(B-2/3)
+#Stationary and non invertible with no parameter redundency. 
+#6. xt = 3/2xt−1 − 1/2xt−2 + wt − 1/3wt−1 + 1/6wt−2
+#1/2x(B^2-3B+2)=1/6w(B^2-2B+6)
+#1/2x(B-2)(B-1)=1/6w(B^2-2B+6)
+#Nonstationary and invertible since the imaginary terms are greater than 1.  
+
+#
+#
+#Time Series
+#Coding for y1
+#This imports the data and creates an acf, pacf, and regular plot for y1
+#Based on the plot of y1, it appears that the data has a stationary pattern.
+#Based on the acf plot it appears that the MA process could be of an order of 7.
+#Based on the partial acf it appears that the AR process for y1 is of order 2 or 3
+#since lag 3 is only slightly over the line of significance.
+
+ps5 <- read.csv("~/Google Drive/UA/Senior Year/Economic Forecasting/Data/ps5.csv")
+View(ps5)
+
+y1 <- ts(ps5$y1)
+
+ts.plot(y1, main="plot of y1", col = "red", ylab="y1")
+
+acf(y1, main= "ACF Plot of y1", sub= "dashed lines = line of significance")
+
+pacf(y1, main= "PACF Plot of y1", sub= "dashed lines = line of significance")
+
+#
+#
+#This calculates the AIC for the possible models. The AIC is the lowest for the ARMA(3,0) and ARMA(2,0)
+#models. The addition of one parameter from the ARMA(2,0) makes a somewhat impactful difference from an
+#AIC of 2804.66 to 2801.331.
+#That is why I am choosing to use the ARMA(3,0) model. 
+
+print(AIC(arima(y1, order = c(2, 0, 0))))
+
+print(AIC(arima(y1, order = c(3, 0, 0))))
+
+print(AIC(arima(y1, order = c(2, 0, 7))))
+
+print(AIC(arima(y1, order = c(3, 0, 7))))
+
+print(AIC(arima(y1, order = c(0, 0, 7))))
+
+#
+#
+#This calculates the predicted values from the residuals of the ARMA model and plots the Observed
+#against the Predicted values. 
+
+y1ARMA3and0 <- arima(y1, order = c(3, 0, 0))
+
+y1hat <- y1 - y1ARMA3and0$residuals
+
+plot(y1, main="Comparing the Observed and Predicted values for y1", xlab="Time", ylab="Observed and Predicted y1", sub="Red = Observed Green = Predicted", col="red")
+lines(y1hat, col= "green")
+
+#
+#
+#This calculates the corrected AIC, which is 2801.355. 
+
+2801.331 + (24)/(1000-4)
+
+#
+#
+#Coding for y2
+#This defines creates a time series, acf, and partial acf plot for y2. 
+#It appears from the time series plot that the data is stationary. The partial acf plot indicates 
+#that there could be an order of 6, 7, 8, or 9 for the AR process since the lags are touching the line of significance 
+#at those points. The acf plot indicates that the MA process could be of lag 1 
+#since it goes from a reasonable autocorrelation level to slifghtly below the line of significance 
+#after lag 1. 
+
+y2 <- ts(ps5$y2)
+
+ts.plot(y2, main="plot of y2", col = "blue", ylab="y2")
+
+acf(y2, main= "ACF Plot of y2", sub= "dashed lines = line of significance")
+
+pacf(y2, main= "PACF Plot of y2", sub= "dashed lines = line of significance")
+
+#
+#
+#This finds the AIC for all of the possible models. The 2nd lowest AIC is at 2858.255
+#for the ARMA(6,1) model, while the lowest is 2851.505 for the ARMA(0,1) model. 
+#This means that with low parameters and a low AIC I will be choosing the ARMA(0,1) model.
+
+print(AIC(arima(y2, order = c(0, 0, 1))))
+
+print(AIC(arima(y2, order = c(6, 0, 0))))
+
+print(AIC(arima(y2, order = c(6, 0, 1))))
+
+print(AIC(arima(y2, order = c(7, 0, 0))))
+
+print(AIC(arima(y2, order = c(7, 0, 1))))
+
+print(AIC(arima(y2, order = c(8, 0, 0))))
+
+print(AIC(arima(y2, order = c(8, 0, 1))))
+
+print(AIC(arima(y2, order = c(9, 0, 0))))
+
+print(AIC(arima(y2, order = c(9, 0, 1))))
+
+#
+#
+#This creates the predicted values and plots them against the observed values for y2. 
+
+y2ARMA0and1 <- arima(y2, order = c(0, 0, 1))
+
+y2hat <- (y2 - y2ARMA0and1$residuals)
+
+plot(y2, main="Comparing the Observed and Predicted values for y2", xlab="Time", ylab="Observed and Predicted y2", sub="Blue = Observed Orange = Predicted", col="blue")
+lines(y2hat, col= "orange")
+
+#
+#
+#This calculates the corrected AIC for the ARMA(0,1) model. The value for it is 2851.509.
+
+2851.505 + ((4)/(1000-2))
+
+
